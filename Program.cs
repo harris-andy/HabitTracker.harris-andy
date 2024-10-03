@@ -1,0 +1,180 @@
+﻿/*
+If you haven't, try using parameterized queries to make your application more secure.
+
+Let the users create their own habits to track. That will require that you let them choose the unit of measurement of each habit.
+
+Seed Data into the database automatically when the database gets created for the first time, generating a few habits and inserting a hundred records with randomly generated values. This is specially helpful during development so you don't have to reinsert data every time you create the database.
+
+Create a report functionality where the users can view specific information (i.e. how many times the user ran in a year? how many kms?) SQL allows you to ask very interesting things from your database.
+*/
+
+using System;
+using System.Data;
+using System.Data.SqlClient;
+using System.Globalization;
+using Microsoft.Data.Sqlite;
+
+string connectionString = @"Data Source=HabitTracker.db";
+
+using (SqliteConnection connection = new SqliteConnection(connectionString))
+{
+    connection.Open();
+    var tableCmd = connection.CreateCommand();
+
+    tableCmd.CommandText = @"CREATE TABLE IF NOT EXISTS habits (
+        Id INTEGER PRIMARY KEY AUTOINCREMENT,
+        Date TEXT,
+        Hobby TEXT,
+        Units TEXT,
+        Quantity INTEGER
+        )";
+
+    tableCmd.ExecuteNonQuery();
+
+    connection.Close();
+}
+
+GetUserInput();
+
+void GetUserInput()
+{
+    Console.Clear();
+    bool closeApp = false;
+    while (closeApp == false)
+    {
+        Console.WriteLine("\n\nMAIN MENU");
+        Console.WriteLine("\nWhat would you like to do?");
+        Console.WriteLine("Type 0 to Close Application");
+        Console.WriteLine("Type 1 to View All Records");
+        Console.WriteLine("Type 2 to Insert Record");
+        Console.WriteLine("Type 3 to Delete Record");
+        Console.WriteLine("Type 4 to Update Record");
+        Console.WriteLine("--------------------------------------------------\n");
+
+        string? command = Console.ReadLine();
+        int tempNumber;
+        if (int.TryParse(command, out tempNumber))
+        {
+            switch (tempNumber)
+            {
+                case 0:
+                    Console.WriteLine("\nGoodbye!\n");
+                    closeApp = true;
+                    Environment.Exit(0);
+                    break;
+                case 1:
+                    GetAllRecords();
+                    break;
+                case 2:
+                    Insert();
+                    break;
+                case 3:
+                    Delete();
+                    break;
+                case 4:
+                    Update();
+                    break;
+                default:
+                    Console.WriteLine("\nInvalid Command. Give me number!");
+                    break;
+            }
+        }
+    }
+}
+
+void Insert()
+{
+    string date = GetDateInput();
+    string hobby = GetHobby();
+    string units = GetUnitsInput();
+    int quantity = GetQuantityInput();
+
+    using (var connection = new SqliteConnection(connectionString))
+    {
+        connection.Open();
+        using (var command = new SqliteCommand("INSERT INTO habits (Date, Hobby, Units, Quantity) VALUES (@date, @hobby, @units, @quantity)", connection))
+        {
+            command.Parameters.AddWithValue("@date", date);
+            command.Parameters.AddWithValue("@hobby", hobby);
+            command.Parameters.AddWithValue("@units", units);
+            command.Parameters.AddWithValue("@quantity", quantity);
+
+            command.ExecuteNonQuery();
+        }
+        connection.Close();
+    }
+}
+
+string GetDateInput()
+{
+    string? date = null;
+    while (!DateTime.TryParseExact(date, format: "dd-MM-yy", new CultureInfo("en-US"), DateTimeStyles.None, out _))
+    {
+        Console.WriteLine("Enter date in format dd-mm-yy. Press 0 to return to Main Menu");
+        date = Console.ReadLine();
+    }
+    if (date == "0") GetUserInput();
+
+    return date;
+}
+
+string GetUnitsInput()
+{
+    string units = "";
+
+    while (string.IsNullOrWhiteSpace(units))
+    {
+        Console.WriteLine("Enter whatever unit of measure you'd like to use. Or press 0 to return to Main Menu");
+        string? temp = Console.ReadLine();
+        if (temp != null)
+        {
+            units = temp.Trim().ToLower();
+        }
+        if (units == "0") GetUserInput();
+    }
+    return units;
+}
+
+int GetQuantityInput()
+{
+    int quantity = -1;
+
+    while (quantity < 0)
+    {
+        Console.WriteLine("Enter amount of activity done/consumed/lost/whatever (greater than 0). Or press 0 to return to Main Menu");
+        string? temp = Console.ReadLine();
+        if (!int.TryParse(temp, out quantity) || quantity < 0)
+        {
+            Console.WriteLine("Try again. A quantity is a positive number. Like 14, 42, 900, etc. You get the idea.");
+        }
+        if (quantity == 0) GetUserInput();
+    }
+    return quantity;
+}
+
+string GetHobby()
+{
+    string? hobby = "";
+    while (string.IsNullOrWhiteSpace(hobby))
+    {
+        Console.WriteLine("Enter name of activity (keep it short). Or press 0 to return to Main Menu");
+        string? temp = Console.ReadLine();
+        hobby = temp?.Trim().ToLower();
+    }
+    if (hobby == "0") GetUserInput();
+    return hobby;
+}
+
+void GetAllRecords()
+{ }
+
+void Delete()
+{
+    Console.Clear();
+}
+
+void Update()
+{
+    Console.Clear();
+
+}
