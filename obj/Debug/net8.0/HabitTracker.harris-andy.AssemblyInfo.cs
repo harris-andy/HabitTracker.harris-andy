@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("HabitTracker.harris-andy")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b60fe4f0493f33e9033c275d90ee47da860dfb27")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ae9886c4a40ab3ed3834166f0a0051eb5fa8ee69")]
 [assembly: System.Reflection.AssemblyProductAttribute("HabitTracker.harris-andy")]
 [assembly: System.Reflection.AssemblyTitleAttribute("HabitTracker.harris-andy")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

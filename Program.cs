@@ -49,6 +49,7 @@ void GetUserInput()
         Console.WriteLine("Type 2 to Insert Record");
         Console.WriteLine("Type 3 to Delete Record");
         Console.WriteLine("Type 4 to Update Record");
+        Console.WriteLine("Type 5 to View A Record Summary");
         Console.WriteLine("--------------------------------------------------\n");
 
         string? command = Console.ReadLine();
@@ -73,6 +74,9 @@ void GetUserInput()
                     break;
                 case 4:
                     Update();
+                    break;
+                case 5:
+                    GetSpecificRecord();
                     break;
                 default:
                     Console.WriteLine("\nInvalid Command. Give me number!");
@@ -212,19 +216,85 @@ void GetAllRecords()
 
 void GetSpecificRecord()
 {
-    //     SELECT 
-    //     Hobby, 
-    //     COUNT(*) AS ActivityCount, 
-    //     SUM(Quantity) AS TotalQuantity, 
-    //     Units
-    // FROM 
-    //     habits
-    // WHERE 
-    //     Hobby = 'walking'
-    // GROUP BY 
-    //     Hobby, Units;
+    Console.Clear();
+    string activity = GetActivity();
+    Console.Clear();
 
+    using (var connection = new SqliteConnection(connectionString))
+    {
+        connection.Open();
+        using (var command = new SqliteCommand("SELECT Hobby, COUNT(*) AS ActivityCount, SUM(Quantity) AS TotalQuantity, Units FROM habits WHERE hobby = @activity GROUP BY Hobby, Units", connection))
+        {
+            command.Parameters.AddWithValue("@activity", activity);
 
+            using (var reader = command.ExecuteReader())
+            {
+                if (reader.Read())
+                {
+                    string hobby = reader.GetString(0);
+                    int count = reader.GetInt32(1);
+                    int quantity = reader.GetInt32(2);
+                    string units = reader.GetString(3);
+                    string howMany = count == 1 ? "time" : "times";
+
+                    Console.WriteLine("--------------------------------------------------\n");
+                    Console.WriteLine($"You did {hobby} {count} {howMany} for {quantity} {units}. Nice!");
+                    Console.WriteLine("--------------------------------------------------\n");
+                }
+                else
+                {
+                    Console.WriteLine("No records found.");
+                }
+            }
+        }
+        connection.Close();
+    }
+}
+
+string GetActivity()
+{
+    List<string> actions = new List<string>();
+    string activity = "";
+
+    using (var connection = new SqliteConnection(connectionString))
+    {
+        connection.Open();
+        using (var fetchActivity = new SqliteCommand("SELECT DISTINCT Hobby FROM habits", connection))
+        {
+            using (var reader = fetchActivity.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    actions.Add(reader.GetString(0));
+                }
+            };
+        }
+        connection.Close();
+
+        if (actions.Count == 0)
+        {
+            Console.WriteLine("No records found");
+        }
+        else
+        {
+            Console.WriteLine("Enter the number for which action you'd like summary. Or press 0 to return to Main Menu");
+            for (int i = 0; i < actions.Count; i++)
+            {
+                Console.WriteLine($"{i + 1}: {actions[i]}");
+            }
+            string? temp = Console.ReadLine();
+            if (int.TryParse(temp, out int number))
+            {
+                if (number == 0) GetUserInput();
+                while (number > actions.Count)
+                {
+                    Console.WriteLine("Try again, enter a valid number");
+                }
+                activity = actions[number - 1];
+            }
+        }
+    }
+    return activity;
 }
 
 void Delete()
