@@ -38,3 +38,4 @@
 /Users/andrew/Sync/Programming/C#/cSharpAcademy/HabitTracker.harris-andy/obj/Debug/net8.0/HabitTracker.harris-andy.pdb
 /Users/andrew/Sync/Programming/C#/cSharpAcademy/HabitTracker.harris-andy/obj/Debug/net8.0/HabitTracker.harris-andy.genruntimeconfig.cache
 /Users/andrew/Sync/Programming/C#/cSharpAcademy/HabitTracker.harris-andy/obj/Debug/net8.0/ref/HabitTracker.harris-andy.dll
+/Users/andrew/Sync/Programming/C#/cSharpAcademy/HabitTracker.harris-andy/obj/Debug/net8.0/HabitTracker.harris-andy.sourcelink.json

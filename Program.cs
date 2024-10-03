@@ -1,8 +1,6 @@
 ﻿/*
 If you haven't, try using parameterized queries to make your application more secure.
 
-Let the users create their own habits to track. That will require that you let them choose the unit of measurement of each habit.
-
 Seed Data into the database automatically when the database gets created for the first time, generating a few habits and inserting a hundred records with randomly generated values. This is specially helpful during development so you don't have to reinsert data every time you create the database.
 
 Create a report functionality where the users can view specific information (i.e. how many times the user ran in a year? how many kms?) SQL allows you to ask very interesting things from your database.
@@ -11,6 +9,8 @@ Create a report functionality where the users can view specific information (i.e
 using System;
 using System.Data;
 using System.Data.SqlClient;
+using System.Collections.Generic;
+using System.Linq;
 using System.Globalization;
 using Microsoft.Data.Sqlite;
 
@@ -112,9 +112,11 @@ string GetDateInput()
     {
         Console.WriteLine("Enter date in format dd-mm-yy. Press 0 to return to Main Menu");
         date = Console.ReadLine();
+        if (int.TryParse(date, out int number))
+        {
+            if (number == 0) GetUserInput();
+        }
     }
-    if (date == "0") GetUserInput();
-
     return date;
 }
 
@@ -166,7 +168,64 @@ string GetHobby()
 }
 
 void GetAllRecords()
-{ }
+{
+    Console.Clear();
+    using (SqliteConnection connection = new SqliteConnection(connectionString))
+    {
+        List<HobbyRecord> hobbiesRecord = new List<HobbyRecord>();
+
+        connection.Open();
+        using (SqliteCommand command = new SqliteCommand("SELECT * FROM habits", connection))
+        {
+            // command.Parameters.AddWithValue("@date", date);
+
+            using (SqliteDataReader reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    hobbiesRecord.Add(new HobbyRecord
+                    {
+                        Id = reader.GetInt32(0),
+                        Date = DateTime.ParseExact(reader.GetString(1), format: "dd-mm-yy", new CultureInfo("en-US")),
+                        Hobby = reader.GetString(2),
+                        Units = reader.GetString(3),
+                        Quantity = reader.GetInt32(4)
+                    });
+                }
+            }
+        }
+        connection.Close();
+        Console.WriteLine("--------------------------------------------------\n");
+        Console.WriteLine("\tHere's all the fun stuff you did!\n");
+        if (hobbiesRecord.Count == 0)
+        {
+            Console.WriteLine("No records found. Do stuff!");
+        }
+        var sortedHobbies = hobbiesRecord.OrderBy(record => record.Date).ToList();
+        foreach (HobbyRecord record in sortedHobbies)
+        {
+            Console.WriteLine($"{record.Date.ToString("dd-MMM-yyyy"),-12} {record.Hobby,-15} {record.Units,-5}: {record.Quantity,-5}");
+        }
+        Console.WriteLine("--------------------------------------------------\n");
+    }
+}
+
+void GetSpecificRecord()
+{
+    //     SELECT 
+    //     Hobby, 
+    //     COUNT(*) AS ActivityCount, 
+    //     SUM(Quantity) AS TotalQuantity, 
+    //     Units
+    // FROM 
+    //     habits
+    // WHERE 
+    //     Hobby = 'walking'
+    // GROUP BY 
+    //     Hobby, Units;
+
+
+}
 
 void Delete()
 {
@@ -177,4 +236,13 @@ void Update()
 {
     Console.Clear();
 
+}
+
+class HobbyRecord
+{
+    public int Id { get; set; }
+    public DateTime Date { get; set; }
+    public string? Hobby { get; set; }
+    public string? Units { get; set; }
+    public int Quantity { get; set; }
 }
