@@ -403,11 +403,56 @@ void Delete()
     Console.Clear();
     bool withIds = true;
     GetAllRecords(withIds);
+
+    string? numberInput = null;
+    while (numberInput == null)
+    {
+        Console.WriteLine("Enter the ID number for the record you'd like to delete. Or enter 0 to return to Main Menu.");
+        if (numberInput == "0") GetUserInput();
+        numberInput = Console.ReadLine();
+    }
+    int finalInput = Convert.ToInt32(numberInput);
+
+    using (var connection = new SqliteConnection(connectionString))
+    {
+        connection.Open();
+        using (var command = new SqliteCommand("DELETE FROM habits WHERE ID = @id", connection))
+        {
+            command.Parameters.AddWithValue("@id", numberInput);
+            command.ExecuteNonQuery();
+        }
+        connection.Close();
+    }
+    Console.WriteLine($"Record ID {numberInput} has been deleted.");
 }
 
 void Update()
 {
     Console.Clear();
+    Console.Clear();
+    bool withIds = true;
+    GetAllRecords(withIds);
+
+    string? numberInput = null;
+    while (numberInput == null)
+    {
+        Console.WriteLine("Enter the ID number for the record you'd like to delete. Or enter 0 to return to Main Menu.");
+        if (numberInput == "0") GetUserInput();
+        numberInput = Console.ReadLine();
+    }
+    int finalInput = Convert.ToInt32(numberInput);
+
+    using (var connection = new SqliteConnection(connectionString))
+    {
+        connection.Open();
+        using (var command = new SqliteCommand("DELETE FROM habits WHERE ID = @id", connection))
+        {
+            command.Parameters.AddWithValue("@id", numberInput);
+            command.ExecuteNonQuery();
+        }
+        connection.Close();
+    }
+    Console.WriteLine($"Record ID {numberInput} has been deleted.");
 
 }
 
