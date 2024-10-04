@@ -2,8 +2,6 @@
 If you haven't, try using parameterized queries to make your application more secure.
 
 Seed Data into the database automatically when the database gets created for the first time, generating a few habits and inserting a hundred records with randomly generated values. This is specially helpful during development so you don't have to reinsert data every time you create the database.
-
-Create a report functionality where the users can view specific information (i.e. how many times the user ran in a year? how many kms?) SQL allows you to ask very interesting things from your database.
 */
 
 using System;
@@ -60,7 +58,7 @@ void GetUserInput()
             switch (tempNumber)
             {
                 case 0:
-                    Console.WriteLine("\nGoodbye!\n");
+                    Console.WriteLine("\nLater alligator!\n");
                     closeApp = true;
                     Environment.Exit(0);
                     break;
@@ -77,7 +75,7 @@ void GetUserInput()
                     Update();
                     break;
                 case 5:
-                    GetSpecificRecord();
+                    GetRecordSummary();
                     break;
                 default:
                     Console.WriteLine("\nInvalid Command. Give me number!");
@@ -219,7 +217,7 @@ void GetAllRecords()
     }
 }
 
-void GetSpecificRecord()
+void GetRecordSummary()
 {
     Console.Clear();
     (string searchTerm, string searchTermCategory) = GetSearchTerm();
@@ -228,19 +226,16 @@ void GetSpecificRecord()
     using (var connection = new SqliteConnection(connectionString))
     {
         SqliteCommand chosenCommand;
-        var commandYear = new SqliteCommand("SELECT strftime('%Y', Date) AS Year, Hobby, SUM(Quantity) AS TotalQuantity FROM habits GROUP BY Year, Hobby;", connection);
-        var commandHobby = new SqliteCommand("SELECT Hobby, Units, COUNT(*) AS TotalCount, SUM(Quantity) AS TotalUnits FROM habits WHERE Hobby = @hobby GROUP BY Hobby, Units;", connection);
-        var commandUnits = new SqliteCommand("SELECT Units, SUM(Quantity) AS TotalQuantity FROM habits GROUP BY Units;", connection);
+        var commandYear = new SqliteCommand("SELECT SUBSTR(Date, 7, 4) AS Year, Hobby, Units, SUM(Quantity) AS TotalQuantity FROM habits WHERE SUBSTR(Date, 7, 4) = @year GROUP BY Year, Hobby;", connection);
 
-        // SqliteCommand chosenCommand = (searchTermCategory == "year") ? commandYear
-        //     : (searchTermCategory == "hobby") ? commandHobby
-        //     : commandUnits;
+        var commandHobby = new SqliteCommand("SELECT Hobby, Units, COUNT(*) AS TotalCount, SUM(Quantity) AS TotalUnits FROM habits WHERE Hobby = @hobby GROUP BY Hobby, Units;", connection);
+        var commandUnits = new SqliteCommand("SELECT SUBSTR(Date, 7, 4) AS Year, Hobby, Units, SUM(Quantity) AS TotalQuantity FROM habits WHERE Units = @units GROUP BY Hobby, Units;", connection);
 
         if (searchTermCategory == "year")
         {
             chosenCommand = commandYear;
-            string date = searchTerm;
-            chosenCommand.Parameters.AddWithValue("@date", date);
+            string year = searchTerm;
+            chosenCommand.Parameters.AddWithValue("@year", year);
         }
         else if (searchTermCategory == "hobby")
         {
@@ -256,22 +251,52 @@ void GetSpecificRecord()
         }
 
         connection.Open();
-
         using (chosenCommand)
         {
             using (var reader = chosenCommand.ExecuteReader())
             {
-                if (reader.Read())
-                // HOW TO PARSE THIS DEPENDING ON SEARCH TERM??
+                if (searchTermCategory == "hobby")
                 {
-                    string activity = reader.GetString(0);
-                    string units = reader.GetString(1);
-                    int count = reader.GetInt32(2);
-                    int quantity = reader.GetInt32(3);
-                    string howManyTimes = count == 1 ? "time" : "times";
+                    if (reader.Read())
+                    {
+                        string activity = reader.GetString(0);
+                        string units = reader.GetString(1);
+                        int count = reader.GetInt32(2);
+                        int quantity = reader.GetInt32(3);
+                        string howManyTimes = count == 1 ? "time" : "times";
+
+                        Console.WriteLine("--------------------------------------------------\n");
+                        Console.WriteLine($"You did {activity} {count} {howManyTimes} for {quantity} {units}. Nice!");
+                        Console.WriteLine("--------------------------------------------------\n");
+                    }
+                }
+                else
+                {
+                    int totalQuantity = 0;
+                    List<string> actionRecord = new();
+                    string howManyActivities = actionRecord.Count == 1 ? "activity" : "activities";
+
+                    while (reader.Read())
+                    {
+                        int year = reader.GetInt32(0);
+                        string activity = reader.GetString(1);
+                        string units = reader.GetString(2);
+                        int quantity = reader.GetInt32(3);
+                        totalQuantity += quantity;
+                        actionRecord.Add($"{activity}: {quantity} {units}");
+                    }
+
+                    string yearOutput = $"Completed {actionRecord.Count} {howManyActivities} in {searchTerm}:\n";
+                    string unitsOutput = $"{totalQuantity} {searchTerm} completed across {actionRecord.Count} {howManyActivities}:\n";
 
                     Console.WriteLine("--------------------------------------------------\n");
-                    Console.WriteLine($"You did {activity} {count} {howManyTimes} for {quantity} {units}. Nice!");
+                    if (searchTermCategory == "year") Console.WriteLine(yearOutput);
+                    if (searchTermCategory == "units") Console.WriteLine(unitsOutput);
+                    foreach (string item in actionRecord)
+                    {
+                        Console.WriteLine(item);
+                    }
+                    Console.WriteLine("\n");
                     Console.WriteLine("--------------------------------------------------\n");
                 }
             }
@@ -334,7 +359,6 @@ Tuple<string, string> GetSearchTerm()
                 }
             };
         }
-
         connection.Close();
         Console.Clear();
         searchOptions.Sort();
@@ -350,16 +374,15 @@ Tuple<string, string> GetSearchTerm()
             {
                 Console.WriteLine($"{i + 1}: {searchOptions[i]}");
             }
+            int tempNumber = -1;
             string? tempInput = Console.ReadLine();
-            if (int.TryParse(tempInput, out int tempNumber))
+            while (!int.TryParse(tempInput, out tempNumber) || tempNumber < 0 || tempNumber > searchOptions.Count)
             {
-                if (tempNumber == 0) GetUserInput();
-                while (tempNumber > searchOptions.Count)
-                {
-                    Console.WriteLine("Try again, enter a valid number");
-                }
-                searchTerm = searchOptions[tempNumber - 1];
+                Console.WriteLine("Try again, enter a valid number");
+                tempInput = Console.ReadLine();
             }
+            if (tempNumber == 0) GetUserInput();
+            searchTerm = searchOptions[tempNumber - 1];
         }
     }
     return Tuple.Create(searchTerm, searchTermCategory);
