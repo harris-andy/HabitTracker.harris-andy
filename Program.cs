@@ -1,17 +1,15 @@
 ﻿/*
-If you haven't, try using parameterized queries to make your application more secure.
-
 Seed Data into the database automatically when the database gets created for the first time, generating a few habits and inserting a hundred records with randomly generated values. This is specially helpful during development so you don't have to reinsert data every time you create the database.
 */
 
-using System;
+// using System;
 using System.Data;
-using System.Data.SqlClient;
-using System.Collections.Generic;
-using System.Linq;
+// using System.Data.SqlClient;
+// using System.Collections.Generic;
+// using System.Linq;
 using System.Globalization;
 using Microsoft.Data.Sqlite;
-using System.Runtime.Intrinsics.Arm;
+// using System.Runtime.Intrinsics.Arm;
 
 string connectionString = @"Data Source=HabitTracker.db";
 
@@ -29,6 +27,16 @@ using (SqliteConnection connection = new SqliteConnection(connectionString))
         )";
 
     tableCmd.ExecuteNonQuery();
+
+    using (var command = new SqliteCommand("SELECT COUNT(*) FROM habits;", connection))
+    {
+        var count = command.ExecuteScalar();
+        if (count != null && count.Equals(0))
+        {
+            PopulateDatabase();
+        }
+
+    }
 
     connection.Close();
 }
@@ -399,6 +407,54 @@ void Update()
 
 }
 
+void PopulateDatabase()
+{
+    Random random = new Random();
+    Dictionary<string, string> fakeHobbies = new()
+    {
+        {"walking", "miles"},
+        {"hiking", "miles"},
+        {"drinking", "beers"},
+        {"sleeping", "hours"},
+        {"gaming", "hours"},
+        {"programming", "hours"}
+    };
+    string[] fakeActivities = ["walking", "hiking", "drinking", "sleeping", "gaming", "programming"];
+
+    using (var connection = new SqliteConnection(connectionString))
+    {
+        connection.Open();
+        for (int randomRecord = 0; randomRecord <= 100; randomRecord++)
+        {
+            int randomIndex = random.Next(fakeActivities.Length);
+            string date = GetRandomDate();
+            string hobby = fakeActivities[randomIndex];
+            string units = fakeHobbies[hobby];
+            int quantity = random.Next(10);
+
+            using (var command = new SqliteCommand("INSERT INTO habits (Date, Hobby, Units, Quantity) VALUES (@date, @hobby, @units, @quantity)", connection))
+            {
+                command.Parameters.AddWithValue("@date", date);
+                command.Parameters.AddWithValue("@hobby", hobby);
+                command.Parameters.AddWithValue("@units", units);
+                command.Parameters.AddWithValue("@quantity", quantity);
+
+                command.ExecuteNonQuery();
+            }
+        }
+        connection.Close();
+    }
+}
+
+string GetRandomDate()
+{
+    Random random = new Random();
+
+    int day = random.Next(1, 31);
+    int month = random.Next(1, 13);
+    int year = random.Next(2023, 2025);
+    return $"{day}-{month}-{year}";
+}
 class HobbyRecord
 {
     public int Id { get; set; }
