@@ -222,18 +222,38 @@ void GetAllRecords()
 void GetSpecificRecord()
 {
     Console.Clear();
-    string searchTerm = GetSearchTerm();
+    (string searchTerm, string searchTermCategory) = GetSearchTerm();
     Console.Clear();
 
     using (var connection = new SqliteConnection(connectionString))
     {
+        SqliteCommand chosenCommand;
         var commandYear = new SqliteCommand("SELECT strftime('%Y', Date) AS Year, Hobby, SUM(Quantity) AS TotalQuantity FROM habits GROUP BY Year, Hobby;", connection);
-        var commandHobby = new SqliteCommand("SELECT DISTINCT Hobby FROM habits;", connection);
+        var commandHobby = new SqliteCommand("SELECT Hobby, Units, COUNT(*) AS TotalCount, SUM(Quantity) AS TotalUnits FROM habits WHERE Hobby = @hobby GROUP BY Hobby, Units;", connection);
         var commandUnits = new SqliteCommand("SELECT Units, SUM(Quantity) AS TotalQuantity FROM habits GROUP BY Units;", connection);
 
-        SqliteCommand chosenCommand = (searchTerm == "year") ? commandYear
-                : (searchTerm == "hobby") ? commandHobby
-                : commandUnits;
+        // SqliteCommand chosenCommand = (searchTermCategory == "year") ? commandYear
+        //     : (searchTermCategory == "hobby") ? commandHobby
+        //     : commandUnits;
+
+        if (searchTermCategory == "year")
+        {
+            chosenCommand = commandYear;
+            string date = searchTerm;
+            chosenCommand.Parameters.AddWithValue("@date", date);
+        }
+        else if (searchTermCategory == "hobby")
+        {
+            chosenCommand = commandHobby;
+            string hobby = searchTerm;
+            chosenCommand.Parameters.AddWithValue("@hobby", hobby);
+        }
+        else
+        {
+            chosenCommand = commandUnits;
+            string units = searchTerm;
+            chosenCommand.Parameters.AddWithValue("@units", units);
+        }
 
         connection.Open();
 
@@ -244,19 +264,15 @@ void GetSpecificRecord()
                 if (reader.Read())
                 // HOW TO PARSE THIS DEPENDING ON SEARCH TERM??
                 {
-                    string hobby = reader.GetString(0);
-                    int count = reader.GetInt32(1);
-                    int quantity = reader.GetInt32(2);
-                    string units = reader.GetString(3);
+                    string activity = reader.GetString(0);
+                    string units = reader.GetString(1);
+                    int count = reader.GetInt32(2);
+                    int quantity = reader.GetInt32(3);
                     string howManyTimes = count == 1 ? "time" : "times";
 
                     Console.WriteLine("--------------------------------------------------\n");
-                    Console.WriteLine($"You did {hobby} {count} {howManyTimes} for {quantity} {units}. Nice!");
+                    Console.WriteLine($"You did {activity} {count} {howManyTimes} for {quantity} {units}. Nice!");
                     Console.WriteLine("--------------------------------------------------\n");
-                }
-                else
-                {
-                    Console.WriteLine("No records found.");
                 }
             }
         }
@@ -264,7 +280,7 @@ void GetSpecificRecord()
     }
 }
 
-string GetSearchTerm()
+Tuple<string, string> GetSearchTerm()
 {
     Console.Clear();
     string searchTermCategory = "";
@@ -346,7 +362,7 @@ string GetSearchTerm()
             }
         }
     }
-    return searchTerm;
+    return Tuple.Create(searchTerm, searchTermCategory);
 }
 
 void Delete()
