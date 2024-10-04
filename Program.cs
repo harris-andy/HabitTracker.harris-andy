@@ -49,12 +49,15 @@ void MainMenu()
             "\tType 3 to Delete Record\n" +
             "\tType 4 to Update Record\n" +
             "\tType 5 to View A Record Summary\n" +
+            "\tType 6 to Delete All Records :(\n" +
+            "\tType 7 to Add 100 Rows of Fake Data\n" +
             "--------------------------------------------------\n";
 
         int inputNumber = -1;
         while (inputNumber < 0)
         {
             inputNumber = validateNumberEntry(message, isMainMenu: true);
+            Console.Clear();
         }
 
         switch (inputNumber)
@@ -79,7 +82,14 @@ void MainMenu()
             case 5:
                 GetRecordSummary();
                 break;
+            case 6:
+                DeleteTableContents();
+                break;
+            case 7:
+                PopulateDatabase();
+                break;
             default:
+                Console.Clear();
                 Console.WriteLine("\nInvalid Command. Give me number!");
                 break;
         }
@@ -520,8 +530,42 @@ int validateNumberEntry(string message, bool isMainMenu = false)
             return -1;
         }
     }
-    Console.WriteLine($"Final input: {finalInput}");
     return finalInput;
+}
+
+void DeleteTableContents()
+{
+    Console.Clear();
+    string? verify = null;
+    string[] prompts = {
+        "Are you SURE you want to delete all this data? y/n",
+        "Are you REALLY SUPER SURE? y/n",
+        "Last chance to turn back! Are you ABSOLUTELY TOTALLY POSITIVELY SURE? y/n"
+    };
+
+    foreach (string prompt in prompts)
+    {
+        Console.WriteLine(prompt);
+        verify = Console.ReadLine()?.ToLower();
+        if (verify != "y")
+        {
+            return;
+        }
+    }
+    using (var connection = new SqliteConnection(connectionString))
+    {
+        connection.Open();
+        using (var command = new SqliteCommand("DELETE FROM habits;", connection))
+        {
+            command.ExecuteNonQuery();
+        }
+        connection.Close();
+    }
+
+    Console.WriteLine("\n\n");
+    Console.WriteLine("Whelp. It's all gone. Now what...?");
+    Thread.Sleep(2000);
+    MainMenu();
 }
 class HobbyRecord
 {
