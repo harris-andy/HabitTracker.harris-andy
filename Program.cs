@@ -30,14 +30,12 @@ using (SqliteConnection connection = new SqliteConnection(connectionString))
 
     using (var command = new SqliteCommand("SELECT COUNT(*) FROM habits;", connection))
     {
-        var count = command.ExecuteScalar();
-        if (count != null && count.Equals(0))
+        var count = Convert.ToInt32(command.ExecuteScalar());
+        if (count == 0)
         {
             PopulateDatabase();
         }
-
     }
-
     connection.Close();
 }
 
@@ -219,7 +217,7 @@ void GetAllRecords()
         var sortedHobbies = hobbiesRecord.OrderBy(record => record.Date).ToList();
         foreach (HobbyRecord record in sortedHobbies)
         {
-            Console.WriteLine($"{record.Date.ToString("dd-MMM-yyyy"),-12} {record.Hobby,-15} {record.Units,-5}: {record.Quantity,-5}");
+            Console.WriteLine($"{record.Date.ToString("dd-MMM-yyyy"),-14} {record.Hobby,-14} {record.Units,-5}: {record.Quantity,-5}");
         }
         Console.WriteLine("--------------------------------------------------\n");
     }
@@ -268,13 +266,14 @@ void GetRecordSummary()
                     if (reader.Read())
                     {
                         string activity = reader.GetString(0);
+                        // string formattedActivity = activity.Substring(0).ToUpper() + activity.Substring(1:);
                         string units = reader.GetString(1);
                         int count = reader.GetInt32(2);
                         int quantity = reader.GetInt32(3);
                         string howManyTimes = count == 1 ? "time" : "times";
 
                         Console.WriteLine("--------------------------------------------------\n");
-                        Console.WriteLine($"You did {activity} {count} {howManyTimes} for {quantity} {units}. Nice!");
+                        Console.WriteLine($"{activity.Substring(0, 1).ToUpper() + activity.Substring(1)} done {count} {howManyTimes} for {quantity} {units}. Nice!\n");
                         Console.WriteLine("--------------------------------------------------\n");
                     }
                 }
@@ -291,12 +290,13 @@ void GetRecordSummary()
                         string units = reader.GetString(2);
                         int quantity = reader.GetInt32(3);
                         totalQuantity += quantity;
-                        actionRecord.Add($"{activity}: {quantity} {units}");
+                        actionRecord.Add($"{activity.Substring(0, 1).ToUpper() + activity.Substring(1)}: {quantity} {units}");
                     }
 
                     string yearOutput = $"Completed {actionRecord.Count} {howManyActivities} in {searchTerm}:\n";
                     string unitsOutput = $"{totalQuantity} {searchTerm} completed across {actionRecord.Count} {howManyActivities}:\n";
 
+                    Console.WriteLine("\n");
                     Console.WriteLine("--------------------------------------------------\n");
                     if (searchTermCategory == "year") Console.WriteLine(yearOutput);
                     if (searchTermCategory == "units") Console.WriteLine(unitsOutput);
@@ -424,7 +424,7 @@ void PopulateDatabase()
     using (var connection = new SqliteConnection(connectionString))
     {
         connection.Open();
-        for (int randomRecord = 0; randomRecord <= 100; randomRecord++)
+        for (int randomRecord = 0; randomRecord < 100; randomRecord++)
         {
             int randomIndex = random.Next(fakeActivities.Length);
             string date = GetRandomDate();
@@ -450,10 +450,10 @@ string GetRandomDate()
 {
     Random random = new Random();
 
-    int day = random.Next(1, 31);
-    int month = random.Next(1, 13);
-    int year = random.Next(2023, 2025);
-    return $"{day}-{month}-{year}";
+    string day = Convert.ToString(random.Next(1, 31));
+    string month = Convert.ToString(random.Next(1, 13));
+    string year = Convert.ToString(random.Next(2023, 2025));
+    return $"{day.PadLeft(2, '0')}-{month.PadLeft(2, '0')}-{year}";
 }
 class HobbyRecord
 {
