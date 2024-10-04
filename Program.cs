@@ -1,8 +1,4 @@
-﻿/*
-Seed Data into the database automatically when the database gets created for the first time, generating a few habits and inserting a hundred records with randomly generated values. This is specially helpful during development so you don't have to reinsert data every time you create the database.
-*/
-
-// using System;
+﻿// using System;
 using System.Data;
 // using System.Data.SqlClient;
 // using System.Collections.Generic;
@@ -45,6 +41,7 @@ void GetUserInput()
 {
     Console.Clear();
     bool closeApp = false;
+    bool withIds = false;
     while (closeApp == false)
     {
         Console.WriteLine("\n\nMAIN MENU");
@@ -69,7 +66,7 @@ void GetUserInput()
                     Environment.Exit(0);
                     break;
                 case 1:
-                    GetAllRecords();
+                    GetAllRecords(withIds);
                     break;
                 case 2:
                     Insert();
@@ -180,7 +177,7 @@ string GetHobby()
     return hobby;
 }
 
-void GetAllRecords()
+void GetAllRecords(bool withIds)
 {
     Console.Clear();
     using (SqliteConnection connection = new SqliteConnection(connectionString))
@@ -215,9 +212,14 @@ void GetAllRecords()
             Console.WriteLine("No records found. Do stuff!");
         }
         var sortedHobbies = hobbiesRecord.OrderBy(record => record.Date).ToList();
-        foreach (HobbyRecord record in sortedHobbies)
+        foreach (HobbyRecord record in withIds ? hobbiesRecord : sortedHobbies)
         {
-            Console.WriteLine($"{record.Date.ToString("dd-MMM-yyyy"),-14} {record.Hobby,-14} {record.Units,-5}: {record.Quantity,-5}");
+            string output = $"{record.Date.ToString("dd-MMM-yyyy"),-13} {record.Hobby,-14} {record.Units,-5}: {record.Quantity,-5}";
+            if (withIds)
+            {
+                output = $"{record.Id,-3}: {record.Date.ToString("dd-MMM-yyyy"),-13} {record.Hobby,-14} {record.Units,-5}: {record.Quantity,-5}";
+            }
+            Console.WriteLine(output);
         }
         Console.WriteLine("--------------------------------------------------\n");
     }
@@ -399,6 +401,8 @@ Tuple<string, string> GetSearchTerm()
 void Delete()
 {
     Console.Clear();
+    bool withIds = true;
+    GetAllRecords(withIds);
 }
 
 void Update()
