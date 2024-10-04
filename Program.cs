@@ -1,11 +1,6 @@
-﻿// using System;
-using System.Data;
-// using System.Data.SqlClient;
-// using System.Collections.Generic;
-// using System.Linq;
+﻿using System.Data;
 using System.Globalization;
 using Microsoft.Data.Sqlite;
-// using System.Runtime.Intrinsics.Arm;
 
 string connectionString = @"Data Source=HabitTracker.db";
 
@@ -35,55 +30,58 @@ using (SqliteConnection connection = new SqliteConnection(connectionString))
     connection.Close();
 }
 
-GetUserInput();
+MainMenu();
 
-void GetUserInput()
+void MainMenu()
 {
     Console.Clear();
     bool closeApp = false;
     bool withIds = false;
     while (closeApp == false)
     {
-        Console.WriteLine("\n\nMAIN MENU");
-        Console.WriteLine("\nWhat would you like to do?");
-        Console.WriteLine("Type 0 to Close Application");
-        Console.WriteLine("Type 1 to View All Records");
-        Console.WriteLine("Type 2 to Insert Record");
-        Console.WriteLine("Type 3 to Delete Record");
-        Console.WriteLine("Type 4 to Update Record");
-        Console.WriteLine("Type 5 to View A Record Summary");
-        Console.WriteLine("--------------------------------------------------\n");
+        string message =
+            "--------------------------------------------------\n" +
+            "\n\t\tMAIN MENU\n\n" +
+            "\tWhat would you like to do?\n\n" +
+            "\tType 0 to Close Application\n" +
+            "\tType 1 to View All Records\n" +
+            "\tType 2 to Insert Record\n" +
+            "\tType 3 to Delete Record\n" +
+            "\tType 4 to Update Record\n" +
+            "\tType 5 to View A Record Summary\n" +
+            "--------------------------------------------------\n";
 
-        string? command = Console.ReadLine();
-        int tempNumber;
-        if (int.TryParse(command, out tempNumber))
+        int inputNumber = -1;
+        while (inputNumber < 0)
         {
-            switch (tempNumber)
-            {
-                case 0:
-                    Console.WriteLine("\nLater alligator!\n");
-                    closeApp = true;
-                    Environment.Exit(0);
-                    break;
-                case 1:
-                    GetAllRecords(withIds);
-                    break;
-                case 2:
-                    Insert();
-                    break;
-                case 3:
-                    Delete();
-                    break;
-                case 4:
-                    Update();
-                    break;
-                case 5:
-                    GetRecordSummary();
-                    break;
-                default:
-                    Console.WriteLine("\nInvalid Command. Give me number!");
-                    break;
-            }
+            inputNumber = validateNumberEntry(message, isMainMenu: true);
+        }
+
+        switch (inputNumber)
+        {
+            case 0:
+                Console.WriteLine("\nBye!\n");
+                closeApp = true;
+                Environment.Exit(0);
+                break;
+            case 1:
+                GetAllRecords(withIds);
+                break;
+            case 2:
+                Insert();
+                break;
+            case 3:
+                Delete();
+                break;
+            case 4:
+                Update();
+                break;
+            case 5:
+                GetRecordSummary();
+                break;
+            default:
+                Console.WriteLine("\nInvalid Command. Give me number!");
+                break;
         }
     }
 }
@@ -124,7 +122,7 @@ string GetDateInput()
         date = Console.ReadLine();
         if (int.TryParse(date, out int number))
         {
-            if (number == 0) GetUserInput();
+            if (number == 0) MainMenu();
         }
     }
     return date;
@@ -142,7 +140,7 @@ string GetUnitsInput()
         {
             units = temp.Trim().ToLower();
         }
-        if (units == "0") GetUserInput();
+        if (units == "0") MainMenu();
     }
     return units;
 }
@@ -153,13 +151,9 @@ int GetQuantityInput()
 
     while (quantity < 0)
     {
-        Console.WriteLine("Enter amount of activity done/consumed/lost/whatever (greater than 0). Or press 0 to return to Main Menu");
-        string? temp = Console.ReadLine();
-        if (!int.TryParse(temp, out quantity) || quantity < 0)
-        {
-            Console.WriteLine("Try again. A quantity is a positive number. Like 14, 42, 900, etc. You get the idea.");
-        }
-        if (quantity == 0) GetUserInput();
+        // Console.WriteLine("Enter amount of activity done/consumed/lost/whatever (greater than 0). Or press 0 to return to Main Menu");
+        string message = "Enter amount of activity done/consumed/lost/whatever (greater than 0). Or press 0 to return to Main Menu";
+        quantity = validateNumberEntry(message);
     }
     return quantity;
 }
@@ -173,7 +167,7 @@ string GetHobby()
         string? temp = Console.ReadLine();
         hobby = temp?.Trim().ToLower();
     }
-    if (hobby == "0") GetUserInput();
+    if (hobby == "0") MainMenu();
     return hobby;
 }
 
@@ -187,8 +181,6 @@ void GetAllRecords(bool withIds)
         connection.Open();
         using (SqliteCommand command = new SqliteCommand("SELECT * FROM habits", connection))
         {
-            // command.Parameters.AddWithValue("@date", date);
-
             using (SqliteDataReader reader = command.ExecuteReader())
             {
                 while (reader.Read())
@@ -196,7 +188,7 @@ void GetAllRecords(bool withIds)
                     hobbiesRecord.Add(new HobbyRecord
                     {
                         Id = reader.GetInt32(0),
-                        Date = DateTime.ParseExact(reader.GetString(1), format: "dd-mm-yyyy", new CultureInfo("en-US")),
+                        Date = DateTime.ParseExact(reader.GetString(1), format: "dd-MM-yyyy", new CultureInfo("en-US")),
                         Hobby = reader.GetString(2),
                         Units = reader.GetString(3),
                         Quantity = reader.GetInt32(4)
@@ -206,7 +198,7 @@ void GetAllRecords(bool withIds)
         }
         connection.Close();
         Console.WriteLine("--------------------------------------------------\n");
-        Console.WriteLine("\tHere's all the fun stuff you did!\n");
+        Console.WriteLine("Here's all the fun stuff you did!\n");
         if (hobbiesRecord.Count == 0)
         {
             Console.WriteLine("No records found. Do stuff!");
@@ -227,7 +219,6 @@ void GetAllRecords(bool withIds)
 
 void GetRecordSummary()
 {
-    Console.Clear();
     (string searchTerm, string searchTermCategory) = GetSearchTerm();
     Console.Clear();
 
@@ -268,7 +259,6 @@ void GetRecordSummary()
                     if (reader.Read())
                     {
                         string activity = reader.GetString(0);
-                        // string formattedActivity = activity.Substring(0).ToUpper() + activity.Substring(1:);
                         string units = reader.GetString(1);
                         int count = reader.GetInt32(2);
                         int quantity = reader.GetInt32(3);
@@ -321,31 +311,31 @@ Tuple<string, string> GetSearchTerm()
     string searchTermCategory = "";
     string searchTerm = "";
     List<string> searchOptions = new List<string>();
+    string message = "Choose a summary by:\n1. Year\n2. Hobby\n3. Units (e.g. how many miles or hours)";
 
-    Console.WriteLine("Choose a summary by:");
-    Console.WriteLine("1. Year");
-    Console.WriteLine("2. Hobby");
-    Console.WriteLine("3. Units (e.g. how many miles or hours)");
-    string? temp = Console.ReadLine();
-
-    if (int.TryParse(temp, out int number) && number >= 1 && number <= 3)
+    int number = -1;
+    while (number < 1 || number > 3)
     {
-        switch (number)
-        {
-            case 1:
-                searchTermCategory = "year";
-                break;
-            case 2:
-                searchTermCategory = "hobby";
-                break;
-            case 3:
-                searchTermCategory = "units";
-                break;
-            default:
-                Console.WriteLine("Invalid answer. Number between 1-3:");
-                break;
-        }
+        Console.Clear();
+        number = validateNumberEntry(message);
     }
+
+    switch (number)
+    {
+        case 1:
+            searchTermCategory = "year";
+            break;
+        case 2:
+            searchTermCategory = "hobby";
+            break;
+        case 3:
+            searchTermCategory = "units";
+            break;
+        default:
+            Console.WriteLine("Invalid answer. Need number between 1-3:");
+            break;
+    }
+
 
     using (var connection = new SqliteConnection(connectionString))
     {
@@ -379,19 +369,20 @@ Tuple<string, string> GetSearchTerm()
         }
         else
         {
-            Console.WriteLine($"Enter the number for which {searchTermCategory} you'd like a summary. Or press 0 to return to Main Menu");
-            for (int i = 0; i < searchOptions.Count; i++)
-            {
-                Console.WriteLine($"{i + 1}: {searchOptions[i]}");
-            }
+            string messageSearchTerm = $"Enter the number for which {searchTermCategory} you'd like a summary. Or press 0 to return to Main Menu";
             int tempNumber = -1;
-            string? tempInput = Console.ReadLine();
-            while (!int.TryParse(tempInput, out tempNumber) || tempNumber < 0 || tempNumber > searchOptions.Count)
+
+            do
             {
-                Console.WriteLine("Try again, enter a valid number");
-                tempInput = Console.ReadLine();
-            }
-            if (tempNumber == 0) GetUserInput();
+                Console.Clear();
+                Console.WriteLine("Available Units:");
+                for (int i = 0; i < searchOptions.Count; i++)
+                {
+                    Console.WriteLine($"{i + 1}: {searchOptions[i]}");
+                }
+                tempNumber = validateNumberEntry(messageSearchTerm);
+            } while (tempNumber < 0 || tempNumber > searchOptions.Count);
+
             searchTerm = searchOptions[tempNumber - 1];
         }
     }
@@ -404,26 +395,20 @@ void Delete()
     bool withIds = true;
     GetAllRecords(withIds);
 
-    string? numberInput = null;
-    while (numberInput == null)
-    {
-        Console.WriteLine("Enter the ID number for the record you'd like to delete. Or enter 0 to return to Main Menu.");
-        if (numberInput == "0") GetUserInput();
-        numberInput = Console.ReadLine();
-    }
-    int finalInput = Convert.ToInt32(numberInput);
+    string message = "Enter the ID number for the record you'd like to delete. Or enter 0 to return to Main Menu.";
+    int recordID = validateNumberEntry(message);
 
     using (var connection = new SqliteConnection(connectionString))
     {
         connection.Open();
         using (var command = new SqliteCommand("DELETE FROM habits WHERE ID = @id", connection))
         {
-            command.Parameters.AddWithValue("@id", numberInput);
+            command.Parameters.AddWithValue("@id", recordID);
             command.ExecuteNonQuery();
         }
         connection.Close();
     }
-    Console.WriteLine($"Record ID {numberInput} has been deleted.");
+    Console.WriteLine($"Record ID {recordID} has been deleted.");
 }
 
 void Update()
@@ -433,27 +418,32 @@ void Update()
     bool withIds = true;
     GetAllRecords(withIds);
 
-    string? numberInput = null;
-    while (numberInput == null)
-    {
-        Console.WriteLine("Enter the ID number for the record you'd like to delete. Or enter 0 to return to Main Menu.");
-        if (numberInput == "0") GetUserInput();
-        numberInput = Console.ReadLine();
-    }
-    int finalInput = Convert.ToInt32(numberInput);
+    string message = "Enter the ID number for the record you'd like to update. Or enter 0 to return to Main Menu.";
+    int recordID = validateNumberEntry(message);
+    if (recordID == 0) MainMenu();
+
+    Console.Clear();
+    Console.WriteLine("Enter the updated record:");
+    string date = GetDateInput();
+    string hobby = GetHobby();
+    string units = GetUnitsInput();
+    int quantity = GetQuantityInput();
 
     using (var connection = new SqliteConnection(connectionString))
     {
         connection.Open();
-        using (var command = new SqliteCommand("DELETE FROM habits WHERE ID = @id", connection))
+        using (var command = new SqliteCommand("UPDATE habits SET date = @date, hobby = @hobby, units = @units, quantity = @quantity WHERE Id = @id", connection))
         {
-            command.Parameters.AddWithValue("@id", numberInput);
+            command.Parameters.AddWithValue("@id", recordID);
+            command.Parameters.AddWithValue("@date", date);
+            command.Parameters.AddWithValue("@hobby", hobby);
+            command.Parameters.AddWithValue("@units", units);
+            command.Parameters.AddWithValue("@quantity", quantity);
             command.ExecuteNonQuery();
         }
         connection.Close();
     }
-    Console.WriteLine($"Record ID {numberInput} has been deleted.");
-
+    Console.WriteLine($"Record ID {recordID} has been updated.");
 }
 
 void PopulateDatabase()
@@ -503,6 +493,35 @@ string GetRandomDate()
     string month = Convert.ToString(random.Next(1, 13));
     string year = Convert.ToString(random.Next(2023, 2025));
     return $"{day.PadLeft(2, '0')}-{month.PadLeft(2, '0')}-{year}";
+}
+
+int validateNumberEntry(string message, bool isMainMenu = false)
+{
+    string? numberInput = null;
+    int finalInput = -1;
+    while (finalInput < 0)
+    {
+        Console.WriteLine(message);
+        numberInput = Console.ReadLine();
+        if (numberInput == "0")
+        {
+            if (isMainMenu)
+            {
+                return 0;
+            }
+            else
+            {
+                MainMenu();
+                return 1;
+            }
+        }
+        if (!int.TryParse(numberInput, out finalInput))
+        {
+            return -1;
+        }
+    }
+    Console.WriteLine($"Final input: {finalInput}");
+    return finalInput;
 }
 class HobbyRecord
 {
