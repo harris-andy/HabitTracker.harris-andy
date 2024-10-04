@@ -89,9 +89,13 @@ void GetUserInput()
 
 void Insert()
 {
+    Console.Clear();
     string date = GetDateInput();
+    Console.Clear();
     string hobby = GetHobby();
+    Console.Clear();
     string units = GetUnitsInput();
+    Console.Clear();
     int quantity = GetQuantityInput();
 
     using (var connection = new SqliteConnection(connectionString))
@@ -113,9 +117,9 @@ void Insert()
 string GetDateInput()
 {
     string? date = null;
-    while (!DateTime.TryParseExact(date, format: "dd-MM-yy", new CultureInfo("en-US"), DateTimeStyles.None, out _))
+    while (!DateTime.TryParseExact(date, format: "dd-MM-yyyy", new CultureInfo("en-US"), DateTimeStyles.None, out _))
     {
-        Console.WriteLine("Enter date in format dd-mm-yy. Press 0 to return to Main Menu");
+        Console.WriteLine("Enter date in format dd-mm-yyyy. Press 0 to return to Main Menu");
         date = Console.ReadLine();
         if (int.TryParse(date, out int number))
         {
@@ -191,7 +195,7 @@ void GetAllRecords()
                     hobbiesRecord.Add(new HobbyRecord
                     {
                         Id = reader.GetInt32(0),
-                        Date = DateTime.ParseExact(reader.GetString(1), format: "dd-mm-yy", new CultureInfo("en-US")),
+                        Date = DateTime.ParseExact(reader.GetString(1), format: "dd-mm-yyyy", new CultureInfo("en-US")),
                         Hobby = reader.GetString(2),
                         Units = reader.GetString(3),
                         Quantity = reader.GetInt32(4)
@@ -218,31 +222,26 @@ void GetAllRecords()
 void GetSpecificRecord()
 {
     Console.Clear();
-    string activity = GetActivity();
-    // year, hobby, units
+    string searchTerm = GetSearchTerm();
     Console.Clear();
-
-    // SQL command: YEAR
-    // var commandYear = new SqliteCommand("SELECT strftime('%Y', Date) AS Year, Hobby, SUM(Quantity) AS TotalQuantity FROM habits GROUP BY Year, Hobby;", connection);
-
-    // SQL command: ACTIVITY
-    // var commandHobby = new SqliteCommand("SELECT DISTINCT Hobby FROM habits;", connection);
-
-    // SQL command: UNITS
-    // var commandUnits = new SqliteCommand("SELECT Units, SUM(Quantity) AS TotalQuantity FROM habits GROUP BY Units;", connection);
-
 
     using (var connection = new SqliteConnection(connectionString))
     {
-        connection.Open();
-        using (var command = new SqliteCommand("SELECT Hobby, COUNT(*) AS ActivityCount, SUM(Quantity) AS TotalQuantity, Units FROM habits WHERE hobby = @activity GROUP BY Hobby, Units", connection))
-        {
-            command.Parameters.AddWithValue("@activity", activity);
+        var commandYear = new SqliteCommand("SELECT strftime('%Y', Date) AS Year, Hobby, SUM(Quantity) AS TotalQuantity FROM habits GROUP BY Year, Hobby;", connection);
+        var commandHobby = new SqliteCommand("SELECT DISTINCT Hobby FROM habits;", connection);
+        var commandUnits = new SqliteCommand("SELECT Units, SUM(Quantity) AS TotalQuantity FROM habits GROUP BY Units;", connection);
 
-            using (var reader = command.ExecuteReader())
+        SqliteCommand chosenCommand = (searchTerm == "year") ? commandYear
+                : (searchTerm == "hobby") ? commandHobby
+                : commandUnits;
+
+        connection.Open();
+
+        using (chosenCommand)
+        {
+            using (var reader = chosenCommand.ExecuteReader())
             {
                 if (reader.Read())
-
                 // HOW TO PARSE THIS DEPENDING ON SEARCH TERM??
                 {
                     string hobby = reader.GetString(0);
@@ -265,16 +264,19 @@ void GetSpecificRecord()
     }
 }
 
-string GetActivity()
+string GetSearchTerm()
 {
     Console.Clear();
     string searchTermCategory = "";
     string searchTerm = "";
-    Console.WriteLine("Choose record summary by:");
+    List<string> searchOptions = new List<string>();
+
+    Console.WriteLine("Choose a summary by:");
     Console.WriteLine("1. Year");
     Console.WriteLine("2. Hobby");
     Console.WriteLine("3. Units (e.g. how many miles or hours)");
     string? temp = Console.ReadLine();
+
     if (int.TryParse(temp, out int number) && number >= 1 && number <= 3)
     {
         switch (number)
@@ -294,11 +296,9 @@ string GetActivity()
         }
     }
 
-    List<string> searchOptions = new List<string>();
-
     using (var connection = new SqliteConnection(connectionString))
     {
-        var commandYear = new SqliteCommand("SELECT DISTINCT strftime('%Y', Date) AS Year FROM habits;", connection);
+        var commandYear = new SqliteCommand("SELECT DISTINCT SUBSTR(Date, 7, 4) AS Year FROM habits;", connection);
         var commandHobby = new SqliteCommand("SELECT DISTINCT Hobby FROM habits;", connection);
         var commandUnits = new SqliteCommand("SELECT DISTINCT Units FROM habits;", connection);
 
@@ -320,6 +320,8 @@ string GetActivity()
         }
 
         connection.Close();
+        Console.Clear();
+        searchOptions.Sort();
 
         if (searchOptions.Count == 0)
         {
@@ -333,14 +335,14 @@ string GetActivity()
                 Console.WriteLine($"{i + 1}: {searchOptions[i]}");
             }
             string? tempInput = Console.ReadLine();
-            if (int.TryParse(temp, out int tempNumber))
+            if (int.TryParse(tempInput, out int tempNumber))
             {
                 if (tempNumber == 0) GetUserInput();
                 while (tempNumber > searchOptions.Count)
                 {
                     Console.WriteLine("Try again, enter a valid number");
                 }
-                searchTerm = searchOptions[number - 1];
+                searchTerm = searchOptions[tempNumber - 1];
             }
         }
     }
