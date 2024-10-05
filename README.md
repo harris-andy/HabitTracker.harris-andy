@@ -1,7 +1,7 @@
 
 # Habit Logger Project
 
-This is my submission for the cSharpAcademy Habit Logger project found here: https://thecsharpacademy.com/project/12/habit-logger
+This is my submission for the cSharpAcademy Habit Logger project found here: [Habit Logger Project]https://thecsharpacademy.com/project/12/habit-logger
 
 ## Project Description
   - It's a small console CRUD app in which the user can track hobbies which are stored in a local SQLite database.
@@ -36,6 +36,3 @@ This is my submission for the cSharpAcademy Habit Logger project found here: htt
   - Which files should I have added to gitignore?
   - The GetRecordSummary() and GetSearchTerm() methods may be a bit unwieldy and I'm not sure how to make them more efficient.
   - Any suggestions on how to clarify my code is greatly appreciated! Program structure is by far the most difficult part for me. Thanks!
-
-
-Created by Andy Harris - [GitHub Profile](https://github.com/harris-andy)
