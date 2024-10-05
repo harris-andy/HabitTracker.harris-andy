@@ -13,9 +13,7 @@ This is my submission for the cSharpAcademy Habit Logger project found here: [Ha
   - Follow the instructions and away you go
   - i.e. Select from the menu to perform operations such as: viewing all records, inserting, updating and deleting records.
 
-    <!-- ![Game Menu](./images/gamemenu.png) -->
     <img src="./images/gamemenu.png" alt="Game Menu" width="500"/>
-
 
 
 ## Features
@@ -25,6 +23,7 @@ This is my submission for the cSharpAcademy Habit Logger project found here: [Ha
    - Populate fake data 100 rows at a time.
    - Delete table contents from the main menu.
    - Parameterized SQL queries used throughout.
+   - Can sort all records by ID or Date.
 
 
 ## More to do
@@ -34,7 +33,7 @@ This is my submission for the cSharpAcademy Habit Logger project found here: [Ha
 
 ## Questions & Comments
   - I reviewed the code conventions documents and did my best cleaning it up. If I missed anything, please let me know.
-  - The program's structure isn't great. I thought about using OOP but it seemed unnecessary for something so small. For example I can see how Insert, Update and Delete could build off one common function but I wasn't sure it was worth it.
+  - The program's structure isn't great. I thought about using OOP but it seemed counterproductive for something so small. For example I can see how Insert, Update and Delete could build off one common function but I wasn't sure it was worth it.
   - Which files should I have added to gitignore?
   - The GetRecordSummary() and GetSearchTerm() methods may be a bit unwieldy but I'm not sure how to make them more efficient.
   - Any suggestions on how to clarify my code is greatly appreciated! Program structure is by far the most difficult part for me. Thanks!

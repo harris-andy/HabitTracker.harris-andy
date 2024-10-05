@@ -182,9 +182,16 @@ string GetHobby()
 void GetAllRecords(bool withIds)
 {
     Console.Clear();
+    string sortMessage = "Sort records by\n1. ID\n2. Date";
+    int sortOption = -1;
+    while (sortOption < 0 || sortOption > 2)
+    {
+        sortOption = validateNumberEntry(sortMessage);
+    }
+
     using (SqliteConnection connection = new SqliteConnection(connectionString))
     {
-        List<HobbyRecord> hobbiesRecord = new List<HobbyRecord>();
+        List<HobbyRecord> hobbiesSortedID = new List<HobbyRecord>();
 
         connection.Open();
         using (SqliteCommand command = new SqliteCommand("SELECT * FROM habits", connection))
@@ -193,7 +200,7 @@ void GetAllRecords(bool withIds)
             {
                 while (reader.Read())
                 {
-                    hobbiesRecord.Add(new HobbyRecord
+                    hobbiesSortedID.Add(new HobbyRecord
                     {
                         Id = reader.GetInt32(0),
                         Date = DateTime.ParseExact(reader.GetString(1), format: "dd-MM-yyyy", new CultureInfo("en-US")),
@@ -207,19 +214,17 @@ void GetAllRecords(bool withIds)
         connection.Close();
         Console.WriteLine("--------------------------------------------------\n");
         Console.WriteLine("Here's all the fun stuff you did!\n");
-        if (hobbiesRecord.Count == 0)
+        if (hobbiesSortedID.Count == 0)
         {
             Console.WriteLine("No records found. Do stuff!");
         }
-        var sortedHobbies = hobbiesRecord.OrderBy(record => record.Date).ToList();
-        foreach (HobbyRecord record in withIds ? hobbiesRecord : sortedHobbies)
+        var hobbiesSortedDate = hobbiesSortedID.OrderBy(record => record.Date).ToList();
+        foreach (HobbyRecord record in sortOption == 1 ? hobbiesSortedID : hobbiesSortedDate)
         {
-            string output = $"{record.Date.ToString("dd-MMM-yyyy"),-13} {record.Hobby,-14} {record.Units,-5}: {record.Quantity,-5}";
-            if (withIds)
-            {
-                output = $"{record.Id,-3}: {record.Date.ToString("dd-MMM-yyyy"),-13} {record.Hobby,-14} {record.Units,-5}: {record.Quantity,-5}";
-            }
-            Console.WriteLine(output);
+            string outputByDate = $"{record.Date.ToString("dd-MMM-yyyy"),-13} {record.Hobby,-14} {record.Units,-5}: {record.Quantity,-5}";
+            string outputByID = $"{record.Id,-3}: {record.Date.ToString("dd-MMM-yyyy"),-13} {record.Hobby,-14} {record.Units,-5}: {record.Quantity,-5}";
+            if (sortOption == 1) Console.WriteLine(outputByID);
+            if (sortOption == 2) Console.WriteLine(outputByDate);
         }
         Console.WriteLine("--------------------------------------------------\n");
     }
@@ -417,13 +422,31 @@ void Delete()
 
 void Update()
 {
-    Console.Clear();
-    Console.Clear();
+    // Console.Clear();
     bool withIds = true;
+    bool recordExists = false;
     GetAllRecords(withIds);
     string message = "Enter the ID number for the record you'd like to update. Or enter 0 to return to Main Menu.";
     int recordID = validateNumberEntry(message);
     if (recordID == 0) MainMenu();
+
+    using (var connection = new SqliteConnection(connectionString))
+    {
+        connection.Open();
+        using (var command = new SqliteCommand("SELECT * FROM habits WHERE Id = @id", connection))
+        {
+            command.Parameters.AddWithValue("@id", recordID);
+            recordExists = Convert.ToInt32(command.ExecuteScalar()) > 0;
+        }
+        connection.Close();
+    }
+    if (!recordExists)
+    {
+        Console.Clear();
+        Console.WriteLine("No record found with that ID. Try again.");
+        Thread.Sleep(2000);
+        Update();
+    }
 
     Console.Clear();
     Console.WriteLine("Enter the updated record:");
