@@ -158,10 +158,8 @@ string GetUnitsInput()
 int GetQuantityInput()
 {
     int quantity = -1;
-
     while (quantity < 0)
     {
-        // Console.WriteLine("Enter amount of activity done/consumed/lost/whatever (greater than 0). Or press 0 to return to Main Menu");
         string message = "Enter amount of activity done/consumed/lost/whatever (greater than 0). Or press 0 to return to Main Menu";
         quantity = validateNumberEntry(message);
     }
@@ -236,7 +234,6 @@ void GetRecordSummary()
     {
         SqliteCommand chosenCommand;
         var commandYear = new SqliteCommand("SELECT SUBSTR(Date, 7, 4) AS Year, Hobby, Units, SUM(Quantity) AS TotalQuantity FROM habits WHERE SUBSTR(Date, 7, 4) = @year GROUP BY Year, Hobby;", connection);
-
         var commandHobby = new SqliteCommand("SELECT Hobby, Units, COUNT(*) AS TotalCount, SUM(Quantity) AS TotalUnits FROM habits WHERE Hobby = @hobby GROUP BY Hobby, Units;", connection);
         var commandUnits = new SqliteCommand("SELECT SUBSTR(Date, 7, 4) AS Year, Hobby, Units, SUM(Quantity) AS TotalQuantity FROM habits WHERE Units = @units GROUP BY Hobby, Units;", connection);
 
@@ -381,7 +378,6 @@ Tuple<string, string> GetSearchTerm()
         {
             string messageSearchTerm = $"Enter the number for which {searchTermCategory} you'd like a summary. Or press 0 to return to Main Menu";
             int tempNumber = -1;
-
             do
             {
                 Console.Clear();
@@ -392,7 +388,6 @@ Tuple<string, string> GetSearchTerm()
                 }
                 tempNumber = validateNumberEntry(messageSearchTerm);
             } while (tempNumber < 0 || tempNumber > searchOptions.Count);
-
             searchTerm = searchOptions[tempNumber - 1];
         }
     }
@@ -404,7 +399,6 @@ void Delete()
     Console.Clear();
     bool withIds = true;
     GetAllRecords(withIds);
-
     string message = "Enter the ID number for the record you'd like to delete. Or enter 0 to return to Main Menu.";
     int recordID = validateNumberEntry(message);
 
@@ -427,7 +421,6 @@ void Update()
     Console.Clear();
     bool withIds = true;
     GetAllRecords(withIds);
-
     string message = "Enter the ID number for the record you'd like to update. Or enter 0 to return to Main Menu.";
     int recordID = validateNumberEntry(message);
     if (recordID == 0) MainMenu();
@@ -487,7 +480,6 @@ void PopulateDatabase()
                 command.Parameters.AddWithValue("@hobby", hobby);
                 command.Parameters.AddWithValue("@units", units);
                 command.Parameters.AddWithValue("@quantity", quantity);
-
                 command.ExecuteNonQuery();
             }
         }
@@ -498,7 +490,6 @@ void PopulateDatabase()
 string GetRandomDate()
 {
     Random random = new Random();
-
     string day = Convert.ToString(random.Next(1, 31));
     string month = Convert.ToString(random.Next(1, 13));
     string year = Convert.ToString(random.Next(2023, 2025));
@@ -552,6 +543,7 @@ void DeleteTableContents()
             return;
         }
     }
+
     using (var connection = new SqliteConnection(connectionString))
     {
         connection.Open();
