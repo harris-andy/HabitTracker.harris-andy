@@ -33,6 +33,7 @@ This is my submission for the cSharpAcademy Habit Logger project found here: [Ha
 
 
 ## Questions & Comments
+  - I reviewed the code conventions documents and did my best cleaning it up. If I missed anything, please let me know.
   - The program's structure isn't great. I thought about using OOP but it seemed unnecessary for something so small. For example I can see how Insert, Update and Delete could build off one common function but I wasn't sure it was worth it.
   - Which files should I have added to gitignore?
   - The GetRecordSummary() and GetSearchTerm() methods may be a bit unwieldy but I'm not sure how to make them more efficient.
