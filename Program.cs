@@ -292,7 +292,7 @@ void GetRecordSummary()
                         string units = reader.GetString(2);
                         int quantity = reader.GetInt32(3);
                         totalQuantity += quantity;
-                        actionRecord.Add($"{activity.Substring(0, 1).ToUpper() + activity.Substring(1)}: {quantity} {units}");
+                        actionRecord.Add($"{activity.Substring(0, 1).ToUpper() + activity.Substring(1),-12}: {quantity} {units}");
                     }
 
                     string yearOutput = $"Completed {actionRecord.Count} {howManyActivities} in {searchTerm}:\n";
